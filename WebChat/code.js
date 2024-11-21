@@ -10,7 +10,7 @@ const createMessage = (messageText, className) => {
   message.classList.add("message", className);
   let chatContent = `<p>${messageText}</p>`;
   message.innerHTML = chatContent;
-  return message; // hola
+  return message; // holaaaa
 }
 
 const newUserMessage = () => {
