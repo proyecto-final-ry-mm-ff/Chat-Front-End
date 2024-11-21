@@ -34,7 +34,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `http://localhost:3000`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro
+        const chatWidgetUrl = `http://localhost:3000`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
 
         iframe.src = chatWidgetUrl;
 
