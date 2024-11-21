@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>[OPERADOR ]Sherlock Chat</title>
+  <style>
+    .content {
+      display: flex;
+      align-items: center;
+      justify-content: space-evenly;
+      background: aliceblue;
+    }
+
+    h1 {
+      width: 100%;
+      background-color: red;
+      color: beige;
+      font-size: 20px;
+      text-align: center;
+    }
+
+    .chatList {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid black;
+      height: 100dvh;
+    }
+
+    .chat {
+      height: 45px;
+      background: greenyellow;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      box-sizing: border-box;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .chat.newChat {
+      background-color: red;
+      color: white;
+      border: 1px solid white;
+    }
+
+    .chatContainer {
+      flex: 3;
+      width: 400px;
+      margin: 0 auto;
+      background: darkgray;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    }
+
+    .chatHeader {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .chatBody {
+      width: 90%;
+    }
+
+    #messages {
+      width: 100%;
+      min-height: 350px;
+      height: auto;
+      background: antiquewhite;
+      display: flex;
+      flex-direction: column;
+      padding: 10px 7px;
+      box-sizing: border-box;
+    }
+
+    .actionsContainer {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+    }
+
+    #messageContent {
+      border-radius: 5px;
+      border: none;
+      height: 35px;
+      width: 68%;
+    }
+
+    #sendMessageButton {
+      height: 35px;
+    }
+
+    .msg {
+      color: black;
+      width: 50%;
+      height: auto;
+      margin-bottom: 5px;
+      padding: 5px;
+    }
+
+    .clientMsg {
+      background-color: palegreen;
+      align-self: flex-start;
+      border-radius: 8px 8px 8px 0;
+    }
+
+    .opMsg {
+      background-color: paleturquoise;
+      align-self: flex-end;
+      border-radius: 8px 8px 0 8px;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@microsoft/signalr@8.0.7/dist/browser/signalr.min.js"></script>
+</head>
+
+<body>
+  <h1>VISTA OPERADOR</h1>
+  <div class="content">
+    <div class="chatList">
+      <!-- <div class="chat">
+        <span>Chat 1</span>
+      </div>
+      <div class="chat">
+        <span>Chat 2</span>
+      </div>
+      <div class="chat">
+        <span>Chat 3</span>
+      </div>
+      <div class="chat">
+        <span>Chat 4</span>
+      </div> -->
+    </div>
+
+    <div class="chatContainer">
+      <div class="chatHeader">CHAT INDIVIDUAL</div>
+      <div class="chatBody">
+        <div id="messages">
+          <!-- <div class="msg clientMsg">Hola como andas?</div>
+            <div class="msg opMsg">Bien vos</div>
+            <div class="msg opMsg">Te puedo ayudar en algo la concha de tu madre?</div> -->
+        </div>
+        <div class="actionsContainer">
+          <input id="messageContent" type="text" />
+          <button id="sendMessageButton">Send Message</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+    const wssUrl = "http://localhost:5056/chat-hub";
+    const OperatorContext = {};
+
+    // Conexión al hub de SignalR
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(wssUrl)
+      .build();
+
+    // Método para conectar al operador y recibir los chats pendientes
+
+    //Cuando conecto deberia mandar id de operador y JWT 
+    connection.start().then(() => {
+      connection.invoke("OperatorConnect");
+    });
+
+    // Recibe la lista de chats pendientes
+    connection.on("PendingChats", (chats) => {
+      console.log("Chats pendientes:", chats);
+      if (chats.length > 0) {
+        const chatList = chats.map((chat, x) => {
+          return `<div class="chat" id="${chat.id}">
+                    <span>Chat ${chat.id}</span>
+                 </div>`;
+        });
+
+        document.querySelector(".chatList").innerHTML = chatList;
+      }
+      // Mostrar la lista de chats pendientes en la interfaz
+    });
+
+    // Recibe notificación de un nuevo chat
+    connection.on("NewChatRequest", (chat) => {
+      console.log({ chat });
+      console.log(`Nuevo chat disponible: ${chat.id}`);
+      const newChat = `<div class="chat newChat" id="${chat.id}">
+                    <span>Chat ${chat.id}</span>
+                 </div>`;
+
+      document.querySelector(".chatList").insertAdjacentHTML('beforeend', newChat);
+      // Actualizar la interfaz para mostrar el nuevo chat
+    });
+
+    //Me asigno un chat
+    document.querySelector('.content').addEventListener("click", async function (event) {
+      if (event.target && event.target.classList.contains('chat')) {
+        const selectedChatId = Number.parseInt(event.target.id);
+        try {
+          await connection.invoke("AssignOperatorToChat", selectedChatId);
+          OperatorContext.selectedChatId = selectedChatId;
+        } catch (err) {
+          console.error("Error asignar operador:", err);
+        }
+      }
+
+    });
+
+    // Recibe notificación de que un chat fue asignado
+    connection.on("ChatAssigned", (chat) => {
+      console.log(`El chat ${chat.id} ha sido asignado a otro operador.`);
+      // Remover el chat de la lista de pendientes en la interfaz
+    });
+
+    // Escucha los mensajes desde el hub (método "ReceiveMessage")
+    connection.on("ReceiveMessage", (messageDto) => {
+      const messageElement = document.createElement("div");
+      console.log({ messageDto });
+      const senderIsClient = messageDto.senderType == 1 ? true : false;
+      const date = new Date(messageDto.timeStamp);
+      const niceTimeStamp = `${date.getHours()}:${date.getMinutes() < 10 ? '0'+date.getMinutes(): date.getMinutes()}`;
+      messageElement.classList.add("msg", senderIsClient ? "clientMsg" : "opMsg");
+      messageElement.textContent = `${niceTimeStamp} - ${senderIsClient ? 'User' : 'OPE'} says:  ${messageDto.content}`;
+      document.getElementById("messages").appendChild(messageElement);
+    });
+
+    // Método para enviar un mensaje al hub
+    document.getElementById("sendMessageButton").addEventListener("click", async () => {
+      const message = document.getElementById("messageContent").value;
+      try {
+        await connection.invoke("SendMessageToChat", OperatorContext.selectedChatId, 2, message);
+      } catch (err) {
+        console.error("Error al enviar mensaje:", err);
+      }
+    });
+
+  </script>
+</body>
+
+</html>
