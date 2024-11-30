@@ -163,7 +163,7 @@ const sendIdentityData = async (customerData) => {
   });
   const content = await rawResponse.json();
 
-  console.log({ content });
+  console.log("Customer encontrado?",{ content });
 
   if (rawResponse.ok) {
     saveChat({ source: 1, messages: EmbedContext.messageList, customer: { ...content } });
@@ -186,7 +186,7 @@ const createCustomer = async (customerDto) => {
   });
   const content = await rawResponse.json();
 
-  console.log({ content });
+  console.log("Customer creado",{ content });
 
   if (rawResponse.ok) {
     saveChat({ source: 1, messages: EmbedContext.messageList, customer: { ...content } });
@@ -199,7 +199,7 @@ const createCustomer = async (customerDto) => {
 
 
 const saveChat = async (chatDto) => {
-  const rawResponse = await fetch(`${apiUrl}/api/chat`, {
+  const rawResponse = await fetch(`${apiUrl}/chat`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -209,7 +209,7 @@ const saveChat = async (chatDto) => {
   });
   const content = await rawResponse.json();
 
-  console.log({ content });
+  console.log("Chat creado: ",{ content });
 
   if (rawResponse.ok) {
     EmbedContext.chatId = content;
