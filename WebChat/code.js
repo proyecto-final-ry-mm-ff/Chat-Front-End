@@ -154,7 +154,7 @@ connection.on("OperatorJoined", (message) => {
 
 
 const sendIdentityData = async (customerData) => {
-  const rawResponse = await fetch(`http://localhost:5015/api/customer/get-by-phone/${customerData.phone}`, {
+  const rawResponse = await fetch(`${apiUrl}/customer/get-by-phone/${customerData.phone}`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
@@ -176,7 +176,7 @@ const sendIdentityData = async (customerData) => {
 };
 
 const createCustomer = async (customerDto) => {
-  const rawResponse = await fetch('http://localhost:5015/api/customer', {
+  const rawResponse = await fetch(`${apiUrl}/customer`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
@@ -199,7 +199,7 @@ const createCustomer = async (customerDto) => {
 
 
 const saveChat = async (chatDto) => {
-  const rawResponse = await fetch('http://localhost:5015/api/chat', {
+  const rawResponse = await fetch(`${apiUrl}/api/chat`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
