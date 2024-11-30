@@ -74,7 +74,7 @@ const newUserMessage = async () => {
     //El 1 acá es el senderType USUARIO_FINAL
 
     EmbedContext.messageList.push(userMessage);
-    if (EmbedContext.messageList === 1) {
+    if (EmbedContext.messageList.length === 1) {
 
       sendIdentityData({ phone: userMessage });
       // saveChat({ source: 1, messages: EmbedContext.messageList });
