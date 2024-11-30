@@ -72,13 +72,14 @@ const newUserMessage = async () => {
     // }, 600)
     console.log(EmbedContext.chatId);
     //El 1 acá es el senderType USUARIO_FINAL
-    await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
 
     EmbedContext.messageList.push(userMessage);
     if (EmbedContext.messageList === 1) {
 
       sendIdentityData({ phone: userMessage });
       // saveChat({ source: 1, messages: EmbedContext.messageList });
+    } else {
+      await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
     }
     chatInputText.value = "";
   } catch (err) {
@@ -205,13 +206,14 @@ const saveChat = async (chatDto) => {
     },
     body: JSON.stringify(chatDto)
   });
-  const content = await rawResponse.json();
+  const chatDto = await rawResponse.json();
 
-  console.log({ content });
+  console.log({ chatDto });
 
   if (rawResponse.ok) {
+    EmbedContext.chatId = chatDto.id;
     console.log("4 - Quiero hablar con el operador...");
-    await connection.invoke("RequestHelp", content);
+    await connection.invoke("RequestHelp", chatDto);
   } else {
     //TODO: Agarrar el error
   }
