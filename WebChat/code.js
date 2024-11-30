@@ -79,6 +79,7 @@ const newUserMessage = async () => {
       sendIdentityData({ phone: userMessage });
       // saveChat({ source: 1, messages: EmbedContext.messageList });
     } else {
+
       await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
     }
     chatInputText.value = "";
@@ -153,7 +154,7 @@ connection.on("OperatorJoined", (message) => {
 
 
 const sendIdentityData = async (customerData) => {
-  const rawResponse = await fetch(`http://localhost:5015/api/customer/${customerData.phone}`, {
+  const rawResponse = await fetch(`http://localhost:5015/api/customer/get-by-phone/${customerData.phone}`, {
     method: 'GET',
     headers: {
       'Accept': 'application/json',
@@ -211,7 +212,7 @@ const saveChat = async (chatDto) => {
   console.log({ content });
 
   if (rawResponse.ok) {
-    EmbedContext.chatId = content.id;
+    EmbedContext.chatId = content;
     console.log("4 - Quiero hablar con el operador...");
     await connection.invoke("RequestHelp", content);
   } else {
