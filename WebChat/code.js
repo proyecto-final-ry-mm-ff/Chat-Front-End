@@ -206,14 +206,14 @@ const saveChat = async (chatDto) => {
     },
     body: JSON.stringify(chatDto)
   });
-  const chatDto = await rawResponse.json();
+  const content = await rawResponse.json();
 
-  console.log({ chatDto });
+  console.log({ content });
 
   if (rawResponse.ok) {
-    EmbedContext.chatId = chatDto.id;
+    EmbedContext.chatId = content.id;
     console.log("4 - Quiero hablar con el operador...");
-    await connection.invoke("RequestHelp", chatDto);
+    await connection.invoke("RequestHelp", content);
   } else {
     //TODO: Agarrar el error
   }
