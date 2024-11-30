@@ -5,6 +5,7 @@ const messagesList = document.querySelector(".messages-list");
 const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 
 const EmbedContext = {};
+EmbedContext.messageList = [];
 
 
 
@@ -38,8 +39,8 @@ async function startConnection() {
   try {
     await connection.start();
     console.log("3 - Conectado al Hub de SignalR");
-    console.log("4 - Quiero hablar con el operador...");
-    await connection.invoke("RequestHelp");
+    // console.log("4 - Quiero hablar con el operador...");
+    // await connection.invoke("RequestHelp");
   } catch (err) {
     console.error("Error al conectar con el Hub de SignalR", err);
     //  setTimeout(startConnection, 5000); // Reintento en caso de fallo
@@ -54,17 +55,11 @@ connection.on("ChatStarted", (chatConnectionId) => {
   EmbedContext.chatId = chatConnectionId;
 });
 
-
-
-
-
-
 const newUserMessage = async () => {
   try {
     let chatInputText = document.getElementById("text");
     userMessage = chatInputText.value.trim();
     // if (!userMessage) return;
-    // chatInputText.value = "";
 
     // Agrega el mensaje al listado
     // messagesList.appendChild(createMessage(userMessage, "outgoing"));
@@ -78,24 +73,20 @@ const newUserMessage = async () => {
     console.log(EmbedContext.chatId);
     //El 1 acá es el senderType USUARIO_FINAL
     await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
+
+    EmbedContext.messageList.push(userMessage);
+    if (EmbedContext.messageList === 1) {
+
+      sendIdentityData({ phone: userMessage });
+      // saveChat({ source: 1, messages: EmbedContext.messageList });
+    }
+    chatInputText.value = "";
   } catch (err) {
     console.error("Error al enviar mensaje:", err);
   }
-
-  // Llamada a la api 
-  /*(async () => {
-    const rawResponse = await fetch('http://localhost:5015/api/chat', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({'name': text})
-    });
-    const content = await rawResponse.json();  
-    
-  });*/
 }
+
+
 
 connection.on("ReceiveMessage", (messageDto) => {
   const message = document.createElement("li");
@@ -131,7 +122,7 @@ chatTogglerBtn.addEventListener("click", async () => {
     await startConnection();
     document.body.classList.toggle("show-chat");
     chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
-    
+
   } catch (error) {
     console.log(error)
   }
@@ -158,3 +149,71 @@ connection.on("OperatorJoined", (message) => {
   // message.classList.add(senderIsClient ? "outgoing" : "incoming");
   // document.getElementById("messages").appendChild(messageElement);
 });
+
+
+const sendIdentityData = async (customerData) => {
+  const rawResponse = await fetch(`http://localhost:5015/api/customer/${customerData.phone}`, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+  });
+  const content = await rawResponse.json();
+
+  console.log({ content });
+
+  if (rawResponse.ok) {
+    saveChat({ source: 1, messages: EmbedContext.messageList, customer: { ...content } });
+  } else if (rawResponse.status == 404) {
+    createCustomer(customerData);
+  } else {
+    //TODO: Agarrar el error
+  }
+
+};
+
+const createCustomer = async (customerDto) => {
+  const rawResponse = await fetch('http://localhost:5015/api/customer', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(customerDto)
+  });
+  const content = await rawResponse.json();
+
+  console.log({ content });
+
+  if (rawResponse.ok) {
+    saveChat({ source: 1, messages: EmbedContext.messageList, customer: { ...content } });
+  } else {
+    //TODO: Agarrar el error
+  }
+
+};
+
+
+
+const saveChat = async (chatDto) => {
+  const rawResponse = await fetch('http://localhost:5015/api/chat', {
+    method: 'POST',
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(chatDto)
+  });
+  const content = await rawResponse.json();
+
+  console.log({ content });
+
+  if (rawResponse.ok) {
+    console.log("4 - Quiero hablar con el operador...");
+    await connection.invoke("RequestHelp", content);
+  } else {
+    //TODO: Agarrar el error
+  }
+};
+

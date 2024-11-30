@@ -13,8 +13,6 @@
 
 
     const loadChatWidget = () => {
-
-            
         const chatWidget = document.createElement("div");
         const chatWidgetStyle = chatWidget.style;
 
@@ -51,31 +49,31 @@
         document.body.appendChild(chatWidget);
     }
 
-    const identifyMe = async()=> {
+    const identifyMe = async () => {
         console.log("Paso 1 - Me identifico como Web que paga el servicio...");
         const response = await fetch(`${apiUrl}/auth/auth-web`, {
-          headers: { "Content-Type": "application/json" },
-          method: "POST",
-          body: JSON.stringify({ webId, token }),
+            headers: { "Content-Type": "application/json" },
+            method: "POST",
+            body: JSON.stringify({ webId, token }),
         });
         //Capaz esto es al pedo
         const authorize = await response.json();
         console.log({ authorize });
         if (response.ok) {
-          //startConnection();
-         // getChatContext();
-         loadChatWidget()
+            //startConnection();
+            // getChatContext();
+            loadChatWidget()
         }
-      }
-     
-    if(document.readyState === "complete"){
+    }
+
+    if (document.readyState === "complete") {
         // loadChatWidget(); 
         identifyMe();
-       
+
     }
-    else{
+    else {
         document.addEventListener("readystatechange", () => {
-            if(document.readyState === "complete"){
+            if (document.readyState === "complete") {
                 // loadChatWidget();
                 identifyMe();
             }
