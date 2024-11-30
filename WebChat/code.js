@@ -166,8 +166,7 @@ const sendIdentityData = async (customerData) => {
   console.log("Customer encontrado?", { content });
 
   if (rawResponse.ok) {
-    // saveChat({ source: 1, messages: EmbedContext.messageList, customer: content  });
-    saveChat({ source: 1, messages: EmbedContext.messageList }, content);
+    saveChat({ source: 1, messages: EmbedContext.messageList, customerId: content.id });
   } else if (rawResponse.status == 404) {
     createCustomer(customerData);
   } else {
@@ -190,8 +189,7 @@ const createCustomer = async (customerDto) => {
   console.log("Customer creado", { content });
 
   if (rawResponse.ok) {
-    // saveChat({ source: 1, messages: EmbedContext.messageList, customer: content });
-    saveChat({ source: 1, messages: EmbedContext.messageList }, content);
+    saveChat({ source: 1, messages: EmbedContext.messageList, customerId: content.id });
   } else {
     //TODO: Agarrar el error
   }
@@ -200,14 +198,14 @@ const createCustomer = async (customerDto) => {
 
 
 
-const saveChat = async (chatDto, customer) => {
+const saveChat = async (chatDto) => {
   const rawResponse = await fetch(`${apiUrl}/chat`, {
     method: 'POST',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ chat: chatDto, customer })
+    body: JSON.stringify({ chat: chatDto })
   });
   const content = await rawResponse.json();
 
