@@ -150,6 +150,7 @@ const startConnection = async () => {
 
 const newUserMessage = async () => {
   try {
+    let userMessage = chatInputText.value.trim();
     // if (!userMessage) return;
 
     // Agrega el mensaje al listado
@@ -166,13 +167,13 @@ const newUserMessage = async () => {
       const phone = document.getElementById('customer-phone').value.trim();
       sendIdentityData({ name, phone });
       chatInputText.setAttribute('disabled', false);
+      EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
     } else {
-      const userMessage = chatInputText.value.trim();
       //El 1 acá es el senderType USUARIO_FINAL
       await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
+      EmbedContext.messageList.push(userMessage);
     }
 
-    EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
     chatInputText.value = "";
   } catch (err) {
     console.error("Error al enviar mensaje:", err);
