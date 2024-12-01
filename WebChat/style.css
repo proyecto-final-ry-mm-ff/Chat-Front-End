@@ -74,6 +74,7 @@
     max-height: 55vh;
     display: grid;
     grid-template-columns: 1fr;
+    grid-template-rows: min-content;
     overflow: auto;
     padding: 20px 20px 100px;
 }
