@@ -150,8 +150,6 @@ const startConnection = async () => {
 
 const newUserMessage = async () => {
   try {
-    const name = document.getElementById('customer-name').value.trim();
-    const phone = document.getElementById('customer-phone').value.trim();
     // if (!userMessage) return;
 
     // Agrega el mensaje al listado
@@ -163,12 +161,13 @@ const newUserMessage = async () => {
     //   messagesList.appendChild(createMessage("...", "incoming"));
     //   messagesList.scrollTo(0, messagesList.scrollHeight);
     // }, 600)
-    console.log({ name, phone });
-
     if (EmbedContext.messageList.length === 0) {
+      const name = document.getElementById('customer-name').value.trim();
+      const phone = document.getElementById('customer-phone').value.trim();
       sendIdentityData({ name, phone });
       chatInputText.setAttribute('disabled', false);
     } else {
+      const userMessage = chatInputText.value.trim();
       //El 1 acá es el senderType USUARIO_FINAL
       await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
     }
