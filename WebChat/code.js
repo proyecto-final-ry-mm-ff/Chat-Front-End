@@ -3,12 +3,12 @@ EmbedContext.messageList = [];
 
 const apiUrl = "http://localhost:5015";
 const wssUrl = "http://localhost:5056/chat-hub";
-const messagesList = document.querySelector(".messages-list");
-const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 const connection = new signalR.HubConnectionBuilder()
   .withUrl(wssUrl)
   .build();
 
+const messagesList = document.querySelector(".messages-list");
+const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 const sendBtn = document.getElementById("send-btn");
 const chatInputText = document.getElementById("text");
 
@@ -162,6 +162,7 @@ const newUserMessage = async () => {
     //   messagesList.appendChild(createMessage("...", "incoming"));
     //   messagesList.scrollTo(0, messagesList.scrollHeight);
     // }, 600)
+
     if (EmbedContext.messageList.length === 0) {
       const name = document.getElementById('customer-name').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
