@@ -205,7 +205,7 @@ const saveChat = async (chatDto) => {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
-    body: JSON.stringify({ chat: chatDto })
+    body: JSON.stringify(chatDto)
   });
   const content = await rawResponse.json();
 
