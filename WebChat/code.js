@@ -207,14 +207,14 @@ const saveChat = async (chatDto) => {
     },
     body: JSON.stringify(chatDto)
   });
-  const content = await rawResponse.json();
+  const newChat = await rawResponse.json();
 
-  console.log("Chat creado: ", { content });
+  console.log("Chat creado: ", { newChat });
 
   if (rawResponse.ok) {
-    EmbedContext.chatId = content;
+    EmbedContext.chatId = newChat.id;
     console.log("4 - Quiero hablar con el operador...");
-    await connection.invoke("RequestHelp", content);
+    await connection.invoke("RequestHelp", newChat);
   } else {
     //TODO: Agarrar el error
   }
