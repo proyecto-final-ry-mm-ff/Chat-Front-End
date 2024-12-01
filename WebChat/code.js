@@ -166,7 +166,7 @@ const sendIdentityData = async (customerData) => {
   console.log("Customer encontrado?", { content });
 
   if (rawResponse.ok) {
-    saveChat({ source: 1, messages: EmbedContext.messageList, customerId: content.id });
+    saveChat({ source: 1, messages: [], customerId: content.id });
   } else if (rawResponse.status == 404) {
     createCustomer(customerData);
   } else {
@@ -189,7 +189,7 @@ const createCustomer = async (customerDto) => {
   console.log("Customer creado", { content });
 
   if (rawResponse.ok) {
-    saveChat({ source: 1, messages: EmbedContext.messageList, customerId: content.id });
+    saveChat({ source: 1, messages:[], customerId: content.id });
   } else {
     //TODO: Agarrar el error
   }
