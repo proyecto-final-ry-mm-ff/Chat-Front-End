@@ -1,94 +1,23 @@
-
-let sendBtn = document.getElementById("send-btn");
-let userMessage;
-const messagesList = document.querySelector(".messages-list");
-const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
-
 const EmbedContext = {};
 EmbedContext.messageList = [];
 
-
-
 const apiUrl = "http://localhost:5015";
 const wssUrl = "http://localhost:5056/chat-hub";
-
-
-// async function identifyMe() {
-//   console.log("Paso 1 - Me identifico como Web que paga el servicio...");
-//   const response = await fetch(`${apiUrl}/auth/auth-web`, {
-//     headers: { "Content-Type": "application/json" },
-//     method: "POST",
-//     body: JSON.stringify({ webId: "abc2173801", token: "WEB1" }),
-//   });
-//   //Capaz esto es al pedo
-//   const authorize = await response.json();
-//   console.log({ authorize });
-//   if (response.ok) {
-//     startConnection();
-//     // getChatContext();
-//   }
-// }
-// identifyMe();
-
+const messagesList = document.querySelector(".messages-list");
+const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 const connection = new signalR.HubConnectionBuilder()
-  .withUrl(wssUrl, EmbedContext.params) // Cambia el puerto si es necesario
+  .withUrl(wssUrl)
   .build();
 
-// Conéctate al hub
-async function startConnection() {
-  try {
-    await connection.start();
-    console.log("3 - Conectado al Hub de SignalR");
-    // console.log("4 - Quiero hablar con el operador...");
-    // await connection.invoke("RequestHelp");
-  } catch (err) {
-    console.error("Error al conectar con el Hub de SignalR", err);
-    //  setTimeout(startConnection, 5000); // Reintento en caso de fallo
-  }
-}
+const sendBtn = document.getElementById("send-btn");
+const chatInputText = document.getElementById("text");
 
-// connection.on("JoinChat", (chatConnectionId) => {
-//   EmbedContext.chatId = chatConnectionId;
-// });
+
+
 
 connection.on("ChatStarted", (chatConnectionId) => {
   EmbedContext.chatId = chatConnectionId;
 });
-
-const newUserMessage = async () => {
-  try {
-    let chatInputText = document.getElementById("text");
-    userMessage = chatInputText.value.trim();
-    // if (!userMessage) return;
-
-    // Agrega el mensaje al listado
-    // messagesList.appendChild(createMessage(userMessage, "outgoing"));
-    // messagesList.scrollTo(0, messagesList.scrollHeight);
-
-    // Placeholder de respuesta
-    // setTimeout(() => {
-    //   messagesList.appendChild(createMessage("...", "incoming"));
-    //   messagesList.scrollTo(0, messagesList.scrollHeight);
-    // }, 600)
-    console.log(EmbedContext.chatId);
-    //El 1 acá es el senderType USUARIO_FINAL
-
-    EmbedContext.messageList.push(userMessage);
-    if (EmbedContext.messageList.length === 1) {
-
-      sendIdentityData({ phone: userMessage });
-      // saveChat({ source: 1, messages: EmbedContext.messageList });
-    } else {
-
-      await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
-    }
-    chatInputText.value = "";
-  } catch (err) {
-    console.error("Error al enviar mensaje:", err);
-  }
-}
-
-
 
 connection.on("ReceiveMessage", (messageDto) => {
   const message = document.createElement("li");
@@ -107,17 +36,6 @@ connection.on("ReceiveMessage", (messageDto) => {
   messagesList.scrollTo(0, messagesList.scrollHeight);
 });
 
-
-// Crea nueva línea para agregar el mensaje al chat
-// const createMessage = (messageText, className) => {
-//   const message = document.createElement("li");
-//   message.classList.add("message", className);
-//   let chatContent = `<p>${messageText}</p>`;
-//   message.innerHTML = chatContent;
-//   return message; // holaaaa
-// }
-
-sendBtn.addEventListener("click", newUserMessage);
 
 chatTogglerBtn.addEventListener("click", async () => {
   try {
@@ -189,14 +107,12 @@ const createCustomer = async (customerDto) => {
   console.log("Customer creado", { content });
 
   if (rawResponse.ok) {
-    saveChat({ source: 1, messages:[], customerId: content.id });
+    saveChat({ source: 1, messages: [], customerId: content.id });
   } else {
     //TODO: Agarrar el error
   }
 
 };
-
-
 
 const saveChat = async (chatDto) => {
   const rawResponse = await fetch(`${apiUrl}/chat`, {
@@ -219,4 +135,54 @@ const saveChat = async (chatDto) => {
     //TODO: Agarrar el error
   }
 };
+
+const startConnection = async () => {
+  try {
+    await connection.start();
+    console.log("3 - Conectado al Hub de SignalR");
+    // console.log("4 - Quiero hablar con el operador...");
+    // await connection.invoke("RequestHelp");
+  } catch (err) {
+    console.error("Error al conectar con el Hub de SignalR", err);
+    //  setTimeout(startConnection, 5000); // Reintento en caso de fallo
+  }
+}
+
+const newUserMessage = async () => {
+  try {
+    const name = document.getElementById('customer-name').value.trim();
+    const phone = document.getElementById('customer-phone').value.trim();
+    // if (!userMessage) return;
+
+    // Agrega el mensaje al listado
+    // messagesList.appendChild(createMessage(userMessage, "outgoing"));
+    // messagesList.scrollTo(0, messagesList.scrollHeight);
+
+    // Placeholder de respuesta
+    // setTimeout(() => {
+    //   messagesList.appendChild(createMessage("...", "incoming"));
+    //   messagesList.scrollTo(0, messagesList.scrollHeight);
+    // }, 600)
+    console.log({ name, phone });
+
+    if (EmbedContext.messageList.length === 0) {
+      sendIdentityData({ name, phone });
+      chatInputText.setAttribute('disabled', false);
+    } else {
+      //El 1 acá es el senderType USUARIO_FINAL
+      await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
+    }
+
+    EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
+    chatInputText.value = "";
+  } catch (err) {
+    console.error("Error al enviar mensaje:", err);
+  }
+}
+
+
+
+
+sendBtn.addEventListener("click", newUserMessage);
+chatInputText.setAttribute('disabled', true);
 

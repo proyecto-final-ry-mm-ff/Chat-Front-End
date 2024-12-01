@@ -67,15 +67,15 @@
     }
 
     if (document.readyState === "complete") {
-        // loadChatWidget(); 
-        identifyMe();
+        loadChatWidget(); 
+        //identifyMe();
 
     }
     else {
         document.addEventListener("readystatechange", () => {
             if (document.readyState === "complete") {
-                // loadChatWidget();
-                identifyMe();
+                loadChatWidget();
+                //identifyMe();
             }
         });
     }
