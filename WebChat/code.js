@@ -166,7 +166,7 @@ const newUserMessage = async () => {
       const name = document.getElementById('customer-name').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
       sendIdentityData({ name, phone });
-      chatInputText.setAttribute('disabled', false);
+      chatInputText.removeAttribute('disabled');
       EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
     } else {
       //El 1 acá es el senderType USUARIO_FINAL
