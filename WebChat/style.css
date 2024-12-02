@@ -85,7 +85,7 @@
     color: #FFF;
     max-width: 75%;
     white-space: pre-wrap;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     padding: 12px 16px;
     border-radius: 10px 10px 0 10px;
     background-color: #6cacff;
@@ -110,6 +110,8 @@
     border: none;
     margin: 5px 0;
     height: 25px;
+    font-size: 0.8rem;
+    font-style: italic;
     border-bottom: 1px solid lightgreen;
 }
 
@@ -137,7 +139,7 @@
     width: 100%;
     border: none;
     outline: none;
-    font-size: 0.95rem;
+    font-size: 0.8rem;
     resize: none;
     padding: 16px 15px 16px 0;
     text-indent: 10px;
