@@ -1,4 +1,5 @@
 const EmbedContext = {};
+EmbedContext.customerId = 0;
 EmbedContext.messageList = [];
 
 const apiUrl = "http://localhost:5015";
@@ -12,7 +13,7 @@ const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 const sendBtn = document.getElementById("send-btn");
 const chatInputText = document.getElementById("text");
 
-
+const flowId = 6; // ID del flujo que quieres iniciar
 
 
 connection.on("ChatStarted", (chatConnectionId) => {
@@ -39,7 +40,7 @@ connection.on("ReceiveMessage", (messageDto) => {
 
 chatTogglerBtn.addEventListener("click", async () => {
   try {
-    await startConnection();
+    // await startConnection();
     document.body.classList.toggle("show-chat");
     chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
 
@@ -81,14 +82,19 @@ const sendIdentityData = async (customerData) => {
   });
   const content = await rawResponse.json();
 
-  console.log("Customer encontrado?", { content });
-
+  let noError = true;
   if (rawResponse.ok) {
-    saveChat({ source: 1, messages: [], customerId: content.id });
+    // saveChat({ source: 1, messages: [], customerId: content.id });
+    EmbedContext.customerId = content.id;
   } else if (rawResponse.status == 404) {
     createCustomer(customerData);
   } else {
+    noError = false;
     //TODO: Agarrar el error
+  }
+
+  if (noError) {
+    fetchNextNode(flowId);
   }
 
 };
@@ -104,10 +110,9 @@ const createCustomer = async (customerDto) => {
   });
   const content = await rawResponse.json();
 
-  console.log("Customer creado", { content });
-
   if (rawResponse.ok) {
-    saveChat({ source: 1, messages: [], customerId: content.id });
+    EmbedContext.customerId = content.id;
+    // saveChat({ source: 1, messages: [], customerId: content.id });
   } else {
     //TODO: Agarrar el error
   }
@@ -181,9 +186,66 @@ const newUserMessage = async () => {
   }
 }
 
+const fetchNextNode = async (flowId, currentNodeId = null, condition = null) => {
+  try {
+    const query = new URLSearchParams({ currentNodeId, condition }).toString();
+    const response = await fetch(`${apiUrl}/Flow/${flowId}/nextNode?${query}`);
+    if (!response.ok) throw new Error("No se pudo obtener el nodo siguiente.");
+    const nextNodes = await response.json();
+    console.log({ nextNodes });
+    nextNodes.forEach(node => processNode(node));
+
+  } catch (err) {
+    console.error(err.message);
+  } finally {
+    removeLoadingIndicator();
+  }
+}
+
+const processNode = async (node) => {
+  console.log('Procesando nodo', { node });
+  if (node.type === "textNode") {
+    const message = document.createElement("li");
+    const chatContent = `<p>${node.data.label}</p>`;
+    message.classList.add("message");
+    message.innerHTML = chatContent;
+    message.classList.add("incoming");
+    messagesList.appendChild(message);
+
+    messagesList.scrollTo(0, messagesList.scrollHeight);
+
+    fetchNextNode(flowId, node.id);
+  } else if (node.type === "buttonNode") {
+
+    const button = document.createElement('button');
+    button.textContent = node.data.label;
+    button.onclick = () => fetchNextNode(flowId, node.id);
+    messagesList.appendChild(button);
+
+  } else if (node.type === "actionNode") {
+    displayLoadingIndicator();
+
+    if (node.data.label == "Llamar Operador") {
+      await startConnection();
+      saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+    }
+
+    fetchNextNode(flowId, node.id);
+  }
+}
+
+const displayLoadingIndicator = () => {
+  // messagesList.appendChild(createMessage("...", "incoming"));
+  console.log('Esperando nodo...');
+}
+const removeLoadingIndicator = () => {
+  console.log('HAY respuesta del backend');
+}
+
 
 
 
 sendBtn.addEventListener("click", newUserMessage);
+chatInputText.addEventListener('keydown', function (e) { e.key == 'Enter' && newUserMessage });
 chatInputText.setAttribute('disabled', true);
 
