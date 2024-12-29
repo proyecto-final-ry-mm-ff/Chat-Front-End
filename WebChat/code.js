@@ -1,5 +1,5 @@
 const EmbedContext = {};
-EmbedContext.customerId = 0;
+EmbedContext.flow = null;
 EmbedContext.messageList = [];
 
 const apiUrl = "http://localhost:5015";
@@ -13,8 +13,18 @@ const chatTogglerBtn = document.querySelector(".chat-toggle-btn");
 const sendBtn = document.getElementById("send-btn");
 const chatInputText = document.getElementById("text");
 
-const flowId = 6; // ID del flujo que quieres iniciar
+chatTogglerBtn.addEventListener("click", async () => {
+  try {
+    await fetchActiveFlow();
 
+    document.body.classList.toggle("show-chat");
+    chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
+
+  } catch (error) {
+    console.log(error)
+  }
+
+});
 
 connection.on("ChatStarted", (chatConnectionId) => {
   EmbedContext.chatId = chatConnectionId;
@@ -37,40 +47,32 @@ connection.on("ReceiveMessage", (messageDto) => {
   messagesList.scrollTo(0, messagesList.scrollHeight);
 });
 
+connection.on("OperatorJoined", (message) => {
+  removeLoadingIndicator();
+  const messageEl = document.createElement("li");
+  const chatContent = `<p>Se ha asignado un operador! 🧑‍💻</p>`;
+  messageEl.classList.add("message");
+  messageEl.innerHTML = chatContent;
+  messageEl.classList.add("incoming");
+  messagesList.appendChild(messageEl);
+});
 
-chatTogglerBtn.addEventListener("click", async () => {
+const fetchActiveFlow = async () => {
   try {
-    // await startConnection();
-    document.body.classList.toggle("show-chat");
-    chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
+    const response = await fetch(`${apiUrl}/Flow/active/embebido`);
+    if (response.ok) {
+      const flow = await response.json();
+      EmbedContext.flow = flow;
+    } else if (response.status == 404) {
+
+    } else {
+      throw new Error("No se pudo obtener el flujo activo.");
+    }
 
   } catch (error) {
-    console.log(error)
+    console.error("Error al obtener el flujo activo:", error.message);
   }
-
-});
-
-
-// TODO:  Ver que onda con esto, lo dejamos? o es al pedo
-
-connection.on("OperatorJoined", (message) => {
-  const messageElement = document.createElement("div");
-  messageElement.classList.add("message", "incoming");
-  messageElement.textContent = `ADMIN says:  ${message}`;
-  document.getElementById("messages").appendChild(messageElement);
-
-  // const message = document.createElement("li");
-  // const senderIsClient = messageDto.senderType == 1 ? true : false;
-  // // const date = new Date(messageDto.timeStamp);
-  // // const niceTimeStamp = `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
-  //  message.classList.add("message", className);
-  // // message.textContent = `${niceTimeStamp} - ${senderIsClient ? 'User' : 'OPE'} says:  ${messageDto.content}`;
-  // const chatContent = `<p>${messageDto.content}</p>`;
-  // message.innerHTML = chatContent;
-  // message.classList.add(senderIsClient ? "outgoing" : "incoming");
-  // document.getElementById("messages").appendChild(messageElement);
-});
-
+}
 
 const sendIdentityData = async (customerData) => {
   const rawResponse = await fetch(`${apiUrl}/customer/get-by-phone/${customerData.phone}`, {
@@ -94,7 +96,11 @@ const sendIdentityData = async (customerData) => {
   }
 
   if (noError) {
-    fetchNextNode(flowId);
+    if (EmbedContext.flow != null) {
+      fetchNextNode(EmbedContext.flow.id);
+    } else {
+      saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+    }
   }
 
 };
@@ -190,15 +196,19 @@ const fetchNextNode = async (flowId, currentNodeId = null, condition = null) => 
   try {
     const query = new URLSearchParams({ currentNodeId, condition }).toString();
     const response = await fetch(`${apiUrl}/Flow/${flowId}/nextNode?${query}`);
-    if (!response.ok) throw new Error("No se pudo obtener el nodo siguiente.");
-    const nextNodes = await response.json();
-    console.log({ nextNodes });
-    nextNodes.forEach(node => processNode(node));
-
+    if (response.ok) {
+      const nextNodes = await response.json();
+      console.log({ nextNodes });
+      nextNodes.forEach(node => processNode(node));
+    } else {
+      if (response.status == 404) {
+        console.log('Era último nodo')
+      } else {
+        throw new Error("No se pudo obtener el nodo siguiente.");
+      }
+    }
   } catch (err) {
     console.error(err.message);
-  } finally {
-    removeLoadingIndicator();
   }
 }
 
@@ -206,7 +216,7 @@ const processNode = async (node) => {
   console.log('Procesando nodo', { node });
   if (node.type === "textNode") {
     const message = document.createElement("li");
-    const chatContent = `<p>${node.data.label}</p>`;
+    const chatContent = `<p>🤖 ${node.data.label}</p>`;
     message.classList.add("message");
     message.innerHTML = chatContent;
     message.classList.add("incoming");
@@ -214,12 +224,13 @@ const processNode = async (node) => {
 
     messagesList.scrollTo(0, messagesList.scrollHeight);
 
-    fetchNextNode(flowId, node.id);
+    fetchNextNode(EmbedContext.flow.id, node.id);
   } else if (node.type === "buttonNode") {
 
     const button = document.createElement('button');
+    button.classList.add("option-button");
     button.textContent = node.data.label;
-    button.onclick = () => fetchNextNode(flowId, node.id);
+    button.onclick = () => fetchNextNode(EmbedContext.flow.id, node.id);
     messagesList.appendChild(button);
 
   } else if (node.type === "actionNode") {
@@ -230,20 +241,25 @@ const processNode = async (node) => {
       saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
     }
 
-    fetchNextNode(flowId, node.id);
+    fetchNextNode(EmbedContext.flow.id, node.id);
   }
 }
 
 const displayLoadingIndicator = () => {
-  // messagesList.appendChild(createMessage("...", "incoming"));
+  const loader = document.createElement("div");
+  loader.classList.add("stage");
+  loader.innerHTML = `<div class="dot-falling"></div>`;
+  messagesList.appendChild(loader);
   console.log('Esperando nodo...');
 }
+
 const removeLoadingIndicator = () => {
-  console.log('HAY respuesta del backend');
+  setTimeout(() => {
+    const loader = document.querySelector('.stage');
+    loader?.remove();
+    console.log('HAY respuesta del backend');
+  }, 1000)
 }
-
-
-
 
 sendBtn.addEventListener("click", newUserMessage);
 chatInputText.addEventListener('keydown', function (e) { e.key == 'Enter' && newUserMessage });
