@@ -3,13 +3,10 @@
 
     const script = document.currentScript;
 
-    const mio = new URL(script.src);
-    const apiUrl = mio.searchParams.get('url');
-    const token = mio.searchParams.get('token');
-    const webId = mio.searchParams.get('webId');
-
-    // console.log({url,token});
-
+    const targetScriptUrl = new URL(script.src);
+    const apiUrl = 'http://localhost:5015';
+    const token = targetScriptUrl.searchParams.get('token');
+    const webId = targetScriptUrl.searchParams.get('webId');
 
 
     const loadChatWidget = () => {
@@ -51,20 +48,26 @@
 
     const identifyMe = async () => {
         console.log("Paso 1 - Me identifico como Web que paga el servicio...");
-        const response = await fetch(`${apiUrl}/auth/auth-web`, {
-            headers: { "Content-Type": "application/json" },
-            method: "POST",
-            body: JSON.stringify({ webId, token }),
-        });
-        //Capaz esto es al pedo
-        const authorize = await response.json();
-        console.log({ authorize });
-        if (response.ok) {
-            //startConnection();
-            // getChatContext();
-            loadChatWidget()
+        try {
+            const response = await fetch(`${apiUrl}/client/authenticate?webId=${webId}&token=${token}`, {
+                method: "POST",
+            });
+
+            if (!response.ok) {
+                console.error("Error en la autenticación:", response.status, response.statusText);
+                return;
+            }
+
+            const authorize = await response.json();
+            console.log("Autenticación exitosa:", authorize);
+
+            // Cargar el chat solo si la autenticación es correcta
+            loadChatWidget();
+        } catch (error) {
+            console.error("Error en la conexión con el backend:", error);
         }
-    }
+    };
+
 
     if (document.readyState === "complete") {
         // loadChatWidget(); 
