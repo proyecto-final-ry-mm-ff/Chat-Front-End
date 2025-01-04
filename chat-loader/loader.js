@@ -4,7 +4,7 @@
     const script = document.currentScript;
 
     const targetScriptUrl = new URL(script.src);
-    const apiUrl = 'http://localhost:5015';
+    const apiUrl = 'http://localhost:5015'; //URL del SherlockAPI
     const token = targetScriptUrl.searchParams.get('token');
     const webId = targetScriptUrl.searchParams.get('webId');
 
@@ -39,7 +39,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `http://localhost:3001/`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
+        const chatWidgetUrl = `http://localhost:3003/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
 
         iframe.src = chatWidgetUrl;
 

@@ -1,6 +1,7 @@
 const EmbedContext = {};
 EmbedContext.flow = null;
 EmbedContext.messageList = [];
+EmbedContext.webClientId = 0;
 
 const apiUrl = "http://localhost:5015";
 const wssUrl = "http://localhost:5056/chat-hub";
@@ -15,6 +16,8 @@ const chatInputText = document.getElementById("text");
 
 chatTogglerBtn.addEventListener("click", async () => {
   try {
+    const params = new URLSearchParams(window.location.search);
+    EmbedContext.webClientId = parseInt(params.get("clientId"));
     await fetchActiveFlow();
 
     document.body.classList.toggle("show-chat");
@@ -126,6 +129,9 @@ const createCustomer = async (customerDto) => {
 };
 
 const saveChat = async (chatDto) => {
+
+  chatDto.clientId = EmbedContext.webClientId;
+
   const rawResponse = await fetch(`${apiUrl}/chat`, {
     method: 'POST',
     headers: {
