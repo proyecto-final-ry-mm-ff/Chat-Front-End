@@ -34,30 +34,24 @@ connection.on("ChatStarted", (chatConnectionId) => {
 });
 
 connection.on("ReceiveMessage", (messageDto) => {
-  const message = document.createElement("li");
-  console.log({ messageDto });
-  const senderIsClient = messageDto.senderType == 1 ? true : false;
-  // const date = new Date(messageDto.timeStamp);
-  // const niceTimeStamp = `${date.getHours()}:${date.getMinutes() < 10 ? '0' + date.getMinutes() : date.getMinutes()}`;
-  message.classList.add("message");
-  // message.textContent = `${niceTimeStamp} - ${senderIsClient ? 'User' : 'OPE'} says:  ${messageDto.content}`;
-  const chatContent = `<p>${messageDto.content}</p>`;
-  message.innerHTML = chatContent;
-  message.classList.add(senderIsClient ? "outgoing" : "incoming");
-  // document.getElementById("messages").appendChild(messageElement);
-
-  messagesList.appendChild(message);
-  messagesList.scrollTo(0, messagesList.scrollHeight);
+  createMessageElementAndAppend(messageDto);
 });
 
 connection.on("OperatorJoined", (message) => {
   removeLoadingIndicator();
-  const messageEl = document.createElement("li");
-  const chatContent = `<p>Se ha asignado un operador! 🧑‍💻</p>`;
-  messageEl.classList.add("message");
-  messageEl.innerHTML = chatContent;
-  messageEl.classList.add("incoming");
-  messagesList.appendChild(messageEl);
+  // const messageEl = document.createElement("li");
+  // const chatContent = `<p>Se ha asignado un operador! 🧑‍💻</p>`;
+  // messageEl.classList.add("message");
+  // messageEl.innerHTML = chatContent;
+  // messageEl.classList.add("incoming");
+  // messagesList.appendChild(messageEl);
+
+  const messageDto = {
+    senderType: 2,
+    content: `<p>Se ha asignado un operador! 🧑‍💻</p>`
+  }
+
+  createMessageElementAndAppend(messageDto)
 });
 
 const fetchActiveFlow = async () => {
@@ -78,12 +72,13 @@ const fetchActiveFlow = async () => {
 }
 
 const sendIdentityData = async (customerData) => {
-  const rawResponse = await fetch(`${apiUrl}/customer/get-by-phone/${customerData.phone}`, {
-    method: 'GET',
+  const rawResponse = await fetch(`${apiUrl}/customer/identify`, {
+    method: 'POST',
     headers: {
       'Accept': 'application/json',
       'Content-Type': 'application/json'
     },
+    body: JSON.stringify(customerData)
   });
   const content = await rawResponse.json();
 
@@ -91,11 +86,11 @@ const sendIdentityData = async (customerData) => {
   if (rawResponse.ok) {
     // saveChat({ source: 1, messages: [], customerId: content.id });
     EmbedContext.customerId = content.id;
-  } else if (rawResponse.status == 404) {
-    createCustomer(customerData);
+    createMessageElementAndAppend({ senderType: 2, content: `<p>🤖 Genial ${content.name}! qué buscás?</p>` });
+
   } else {
     noError = false;
-    //TODO: Agarrar el error
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 
   if (noError) {
@@ -104,26 +99,6 @@ const sendIdentityData = async (customerData) => {
     } else {
       saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
     }
-  }
-
-};
-
-const createCustomer = async (customerDto) => {
-  const rawResponse = await fetch(`${apiUrl}/customer`, {
-    method: 'POST',
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(customerDto)
-  });
-  const content = await rawResponse.json();
-
-  if (rawResponse.ok) {
-    EmbedContext.customerId = content.id;
-    // saveChat({ source: 1, messages: [], customerId: content.id });
-  } else {
-    //TODO: Agarrar el error
   }
 
 };
@@ -168,24 +143,22 @@ const startConnection = async () => {
 const newUserMessage = async () => {
   try {
     let userMessage = chatInputText.value.trim();
-    // if (!userMessage) return;
-
-    // Agrega el mensaje al listado
-    // messagesList.appendChild(createMessage(userMessage, "outgoing"));
-    // messagesList.scrollTo(0, messagesList.scrollHeight);
-
-    // Placeholder de respuesta
-    // setTimeout(() => {
-    //   messagesList.appendChild(createMessage("...", "incoming"));
-    //   messagesList.scrollTo(0, messagesList.scrollHeight);
-    // }, 600)
 
     if (EmbedContext.messageList.length === 0) {
       const name = document.getElementById('customer-name').value.trim();
       const phone = document.getElementById('customer-phone').value.trim();
-      sendIdentityData({ name, phone });
-      chatInputText.removeAttribute('disabled');
-      EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
+
+      if (validatePhoneNumber(phone)) {
+        sendIdentityData({ name, phone });
+        chatInputText.removeAttribute('disabled');
+        EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
+      } else {
+        createMessageElementAndAppend({
+          senderType: 2,
+          content: `<p>❌ El formato del número no es correcto, por favor intenta nuevamente</p>`
+        });
+      }
+
     } else {
       //El 1 acá es el senderType USUARIO_FINAL
       await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
@@ -265,6 +238,31 @@ const removeLoadingIndicator = () => {
     loader?.remove();
     console.log('HAY respuesta del backend');
   }, 1000)
+}
+
+const createMessageElementAndAppend = (messageDto) => {
+
+  const messageEl = document.createElement("li");
+  console.log({ messageDto });
+  const senderIsClient = messageDto.senderType == 1 ? true : false;
+  messageEl.classList.add("message");
+  const chatContent = `<p>${messageDto.content}</p>`;
+  messageEl.innerHTML = chatContent;
+  messageEl.classList.add(senderIsClient ? "outgoing" : "incoming");
+
+
+  messagesList.appendChild(messageEl);
+  messagesList.scrollTo(0, messagesList.scrollHeight);
+}
+
+const validatePhoneNumber = (phone) => {
+  // Expresión regular que:
+  // ^  : Inicio de la cadena
+  // \+?: Permite '+' opcional al inicio
+  // [0-9]+ : Uno o más dígitos
+  // $  : Fin de la cadena
+  const regex = /^\+?[0-9]+$/;
+  return regex.test(phone);
 }
 
 sendBtn.addEventListener("click", newUserMessage);
