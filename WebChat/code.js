@@ -160,6 +160,9 @@ const newUserMessage = async () => {
       }
 
     } else {
+      if (userMessage.length == 0) {
+        return false;
+      }
       //El 1 acá es el senderType USUARIO_FINAL
       await connection.invoke("SendMessageToChat", EmbedContext.chatId, 1, userMessage);
       EmbedContext.messageList.push(userMessage);
@@ -209,7 +212,11 @@ const processNode = async (node) => {
     const button = document.createElement('button');
     button.classList.add("option-button");
     button.textContent = node.data.label;
-    button.onclick = () => fetchNextNode(EmbedContext.flow.id, node.id);
+    //Solo dejo clickear una vez
+    button.addEventListener("click", () => {
+      fetchNextNode(EmbedContext.flow.id, node.id);
+
+    }, { once: true });
     messagesList.appendChild(button);
 
   } else if (node.type === "actionNode") {
@@ -225,6 +232,12 @@ const processNode = async (node) => {
 }
 
 const displayLoadingIndicator = () => {
+
+  createMessageElementAndAppend({
+    senderType: 2,
+    content: `<p> 🧑‍💻 Esperando por un operador...</p>`
+  });
+
   const loader = document.createElement("div");
   loader.classList.add("stage");
   loader.innerHTML = `<div class="dot-falling"></div>`;
@@ -266,6 +279,10 @@ const validatePhoneNumber = (phone) => {
 }
 
 sendBtn.addEventListener("click", newUserMessage);
-chatInputText.addEventListener('keydown', function (e) { e.key == 'Enter' && newUserMessage });
+chatInputText.addEventListener('keydown', function (e) {
+  if (e.key == 'Enter') {
+    newUserMessage()
+  }
+});
 chatInputText.setAttribute('disabled', true);
 
