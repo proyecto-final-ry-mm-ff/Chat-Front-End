@@ -2,6 +2,8 @@ const EmbedContext = {};
 EmbedContext.flow = null;
 EmbedContext.messageList = [];
 EmbedContext.webClientId = 0;
+EmbedContext.isExistingUser = false;
+EmbedContext.pendingChat = null;
 
 const apiUrl = "http://localhost:5015";
 const wssUrl = "http://localhost:5056/chat-hub";
@@ -85,23 +87,85 @@ const sendIdentityData = async (customerData) => {
   let noError = true;
   if (rawResponse.ok) {
     // saveChat({ source: 1, messages: [], customerId: content.id });
-    EmbedContext.customerId = content.id;
-    createMessageElementAndAppend({ senderType: 2, content: `<p>🤖 Genial ${content.name}! qué buscás?</p>` });
+    EmbedContext.customerId = content.customer.id;
+    EmbedContext.isExistingUser = content.isExistingUser;
+
+    if (!EmbedContext.isExistingUser) {
+      createMessageElementAndAppend({ senderType: 2, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
+    }
 
   } else {
     noError = false;
     createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 
-  if (noError) {
+  //Si es un usuario existente me fijo si tiene chats pendientes antes que nada
+  let pendingChat = false;
+  if (EmbedContext.isExistingUser) {
+    pendingChat = await getPendingChat(EmbedContext.customerId, EmbedContext.webClientId);
+    EmbedContext.pendingChat = pendingChat;
+  }
+
+  //Si hay efectivamente un chat pendiente, pregunto si lo quiere retomar
+  if (EmbedContext.pendingChat) {
+    //Ya conecto al HUB porque cualquiera de las
+    await startConnection();
+    createMessageElementAndAppend({ senderType: 2, content: '<p>🤖 Vemos que tienes un chat sin terminar con nosotros, te gustaría continuarlo?</p>' });
+   
+    createYesNoButtons(async () => {
+      createMessageElementAndAppend({
+        senderType: 2,
+        content: `<p>🤖 Perfecto! Enseguida te comunicamos con un operador, abajo incluimos el historial de la última conversación que tuviste ⬇️ </p>`
+      });
+      renderPreviousChatMessages(EmbedContext.pendingChat);
+      EmbedContext.chatId = EmbedContext.pendingChat.id;
+      displayLoadingIndicator();
+      console.log("19 - Quiero retomar un chat pendiente...");
+      await connection.invoke("RequestHelp", EmbedContext.pendingChat);
+    },
+      () => {
+        EmbedContext.pendingChat = false;
+      }); //
+
+  }
+
+
+  if (!EmbedContext.pendingChat && noError) {
     if (EmbedContext.flow != null) {
       fetchNextNode(EmbedContext.flow.id);
     } else {
+      //Creo un chat nuevo
       saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
     }
   }
 
 };
+
+const getPendingChat = async (customerId, clientId) => {
+  let chat = false;
+  try {
+    const response = await fetch(`${apiUrl}/chat/pending?customerId=${customerId}&clientId=${clientId}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error("No se encontró un chat pendiente para los IDs proporcionados.");
+      }
+      throw new Error(`Error en la solicitud: ${response.statusText}`);
+    }
+
+    chat = await response.json();
+  } catch (error) {
+    console.error("Error al obtener el chat pendiente:", error.message);
+  }
+  finally {
+    return chat;
+  }
+}
 
 const saveChat = async (chatDto) => {
 
@@ -277,6 +341,39 @@ const validatePhoneNumber = (phone) => {
   const regex = /^\+?[0-9]+$/;
   return regex.test(phone);
 }
+
+const createYesNoButtons = (yesAfterFunction, noAfterFunction) => {
+  //BOTON SI
+  const yesButton = document.createElement('button');
+  yesButton.classList.add("option-button");
+  yesButton.textContent = "Si";
+  //Solo dejo clickear una vez
+  yesButton.addEventListener("click", () => {
+    yesAfterFunction();
+  }, { once: true });
+  messagesList.appendChild(yesButton);
+
+
+  //BOTON NO
+  const noButton = document.createElement('button');
+  noButton.classList.add("option-button");
+  noButton.textContent = "No";
+  //Solo dejo clickear una vez
+  noButton.addEventListener("click", () => {
+    noAfterFunction();
+  }, { once: true });
+  messagesList.appendChild(noButton);
+}
+
+const renderPreviousChatMessages = (chat) => {
+  chat.messages.forEach((message) => {
+    createMessageElementAndAppend({
+      senderType: message.senderType,
+      content: `<p> 🕔 ${message.content}</p > `
+    });
+  })
+}
+
 
 sendBtn.addEventListener("click", newUserMessage);
 chatInputText.addEventListener('keydown', function (e) {

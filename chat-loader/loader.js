@@ -17,9 +17,10 @@
         chatWidgetStyle.boxSizing = "border-box";
         chatWidgetStyle.width = "400px";
         chatWidgetStyle.height = "647px";
-        chatWidgetStyle.position = "absolute";
-        chatWidgetStyle.bottom = "40px";
+        chatWidgetStyle.position = "sticky";
+        chatWidgetStyle.bottom = "0";
         chatWidgetStyle.right = "40px";
+        chatWidgetStyle.left = "calc(93% - 400px)";
 
         const iframe = document.createElement("iframe");
 
@@ -39,7 +40,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `http://localhost:3003/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
+        const chatWidgetUrl = `http://localhost:3000/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
 
         iframe.src = chatWidgetUrl;
 
