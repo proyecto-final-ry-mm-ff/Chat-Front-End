@@ -5,8 +5,10 @@ EmbedContext.webClientId = 0;
 EmbedContext.isExistingUser = false;
 EmbedContext.pendingChat = null;
 
-const apiUrl = "http://localhost:5015";
-const wssUrl = "http://localhost:5056/chat-hub";
+const apiUrl = process.env.API_URL;
+const wssUrl = process.env.SIGNALR_URL;
+// const apiUrl = "http://localhost:5015";
+// const wssUrl = "http://localhost:5056/chat-hub";
 const connection = new signalR.HubConnectionBuilder()
   .withUrl(wssUrl)
   .build();
@@ -111,7 +113,7 @@ const sendIdentityData = async (customerData) => {
     //Ya conecto al HUB porque cualquiera de las
     await startConnection();
     createMessageElementAndAppend({ senderType: 2, content: '<p>🤖 Vemos que tienes un chat sin terminar con nosotros, te gustaría continuarlo?</p>' });
-   
+
     createYesNoButtons(async () => {
       createMessageElementAndAppend({
         senderType: 2,
