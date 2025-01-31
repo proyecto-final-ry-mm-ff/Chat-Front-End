@@ -11,5 +11,11 @@
   "license": "ISC",
   "dependencies": {
     "serve": "^14.2.4"
+  },
+  "devDependencies": {
+    "dotenv": "^16.4.7",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
   }
 }
