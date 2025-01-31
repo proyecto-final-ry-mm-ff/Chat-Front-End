@@ -2,6 +2,7 @@
 const path = require('path');
 const webpack = require('webpack');
 const dotenv = require('dotenv').config(); // lee .env y carga las variables
+dotenv.config(); // carga .env si existe localmente
 
 module.exports = {
   mode: 'development', // o 'production' si vas a compilar para producción
