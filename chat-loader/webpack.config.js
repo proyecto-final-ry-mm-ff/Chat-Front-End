@@ -8,7 +8,7 @@ module.exports = {
   entry: './loader.js',
   output: {
     path: path.resolve(__dirname, 'dist'), // carpeta de salida
-    filename: 'bundle.js',
+    filename: 'loader.js',
   },
   devServer: {
     static: path.join(__dirname, 'dist'), // carpeta a servir
