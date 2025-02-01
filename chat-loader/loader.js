@@ -4,7 +4,7 @@
     const script = document.currentScript;
 
     const targetScriptUrl = new URL(script.src);
-    const apiUrl = 'https://loader-oa4g.onrender.com';
+    const apiUrl = 'https://sherlockapi-4qz4.onrender.com';
     const token = targetScriptUrl.searchParams.get('token');
     const webId = targetScriptUrl.searchParams.get('webId');
 
