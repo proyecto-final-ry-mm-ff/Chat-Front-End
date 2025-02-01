@@ -1,4 +1,4 @@
-import './style.css'; 
+import './style.css';
 
 const EmbedContext = {};
 EmbedContext.flow = null;
@@ -22,9 +22,12 @@ const chatInputText = document.getElementById("text");
 
 chatTogglerBtn.addEventListener("click", async () => {
   try {
-    const params = new URLSearchParams(window.location.search);
-    EmbedContext.webClientId = parseInt(params.get("clientId"));
-    await fetchActiveFlow();
+    
+    if (!EmbedContext.flow) {
+      const params = new URLSearchParams(window.location.search);
+      EmbedContext.webClientId = parseInt(params.get("clientId"));
+      await fetchActiveFlow();
+    }
 
     document.body.classList.toggle("show-chat");
     chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
