@@ -40,7 +40,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `https://chatwidget-lud9.onrender.com/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
+        const chatWidgetUrl = `https://chatwidget-lud9.onrender.com/bundle.js?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
 
         iframe.src = chatWidgetUrl;
 
