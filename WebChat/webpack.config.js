@@ -8,7 +8,7 @@ module.exports = {
   entry: './code.js',
   output: {
     path: path.resolve(__dirname, 'dist'), // carpeta de salida
-    filename: 'bundle.js',
+    filename: 'code.js',
   },
   devServer: {
     static: path.join(__dirname, 'dist'), // carpeta a servir
