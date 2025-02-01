@@ -1,3 +1,5 @@
+import './style.css'; 
+
 const EmbedContext = {};
 EmbedContext.flow = null;
 EmbedContext.messageList = [];
