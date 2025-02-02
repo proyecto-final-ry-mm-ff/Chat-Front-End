@@ -47,11 +47,9 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_GRAY_GRASS_0A0C3170F }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          ###### Configuración del repositorio y build ######
           app_location: "chat-loader"
           api_location: "" 
           output_location: "dist"
-          ###### Fin de configuración ######
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
