@@ -7,8 +7,8 @@ EmbedContext.webClientId = 0;
 EmbedContext.isExistingUser = false;
 EmbedContext.pendingChat = null;
 
-const apiUrl = 'https://sherlockapi-4qz4.onrender.com';
-const wssUrl = 'https://sherlock-signalr.onrender.com/chat-hub';
+const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
+const wssUrl = ' https://sherlock-signalr-fbhubsasfrgghqba.canadacentral-01.azurewebsites.net';
 // const apiUrl = "http://localhost:5015";
 // const wssUrl = "http://localhost:5056/chat-hub";
 const connection = new signalR.HubConnectionBuilder()

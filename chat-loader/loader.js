@@ -4,7 +4,7 @@
     const script = document.currentScript;
 
     const targetScriptUrl = new URL(script.src);
-    const apiUrl = 'https://sherlockapi-4qz4.onrender.com';
+    const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
     const token = targetScriptUrl.searchParams.get('token');
     const webId = targetScriptUrl.searchParams.get('webId');
 
@@ -40,7 +40,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `https://chatwidget-lud9.onrender.com/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
+        const chatWidgetUrl = `https://orange-pebble-00ae4940f.4.azurestaticapps.net/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
 
         iframe.src = chatWidgetUrl;
 
