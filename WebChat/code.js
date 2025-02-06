@@ -146,16 +146,19 @@ const sendIdentityData = async (customerData) => {
         }
       }); //
 
+  } else {
+
+    if (noError) {
+      if (EmbedContext.flow != null) {
+        fetchNextNode(EmbedContext.flow.id);
+      } else {
+        //Creo un chat nuevo
+        saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+      }
+    }
+
   }
 
-  if (!EmbedContext.pendingChat && noError) {
-    if (EmbedContext.flow != null) {
-      fetchNextNode(EmbedContext.flow.id);
-    } else {
-      //Creo un chat nuevo
-      saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
-    }
-  }
 };
 
 const getPendingChat = async (customerId, clientId) => {
