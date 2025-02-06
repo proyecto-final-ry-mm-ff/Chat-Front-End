@@ -209,7 +209,7 @@ export const updateChat = async (chatId, statusId) => {
     status: statusId,
     messages: [],
   };
-  const response = await fetch(`${apiUrl}/${chatId}`, {
+  const response = await fetch(`${apiUrl}/chat/${chatId}`, {
     headers: {
       "Content-Type": "application/json",
     },
