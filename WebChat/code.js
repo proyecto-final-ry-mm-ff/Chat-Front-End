@@ -22,7 +22,7 @@ const chatInputText = document.getElementById("text");
 
 chatTogglerBtn.addEventListener("click", async () => {
   try {
-    
+
     if (!EmbedContext.flow) {
       const params = new URLSearchParams(window.location.search);
       EmbedContext.webClientId = parseInt(params.get("clientId"));
@@ -76,6 +76,7 @@ const fetchActiveFlow = async () => {
     }
 
   } catch (error) {
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
     console.error("Error al obtener el flujo activo:", error.message);
   }
 }
@@ -131,6 +132,8 @@ const sendIdentityData = async (customerData) => {
       await connection.invoke("RequestHelp", EmbedContext.pendingChat);
     },
       () => {
+        const endStatusId = 4;
+        updateChat(endStatusId)
         EmbedContext.pendingChat = false;
       }); //
 
@@ -195,19 +198,38 @@ const saveChat = async (chatDto) => {
     console.log("4 - Quiero hablar con el operador...");
     await connection.invoke("RequestHelp", newChat);
   } else {
-    //TODO: Agarrar el error
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
+};
+
+export const updateChat = async (statusId) => {
+  const chatUpdateDto = {
+    chatId: EmbedContext.chatId,
+    customerId: EmbedContext.customerId,
+    status: statusId,
+    messages: [],
+  };
+  const response = await fetch(`${apiUrl}/${EmbedContext.chatId}`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    method: "PUT",
+    body: JSON.stringify(chatUpdateDto),
+  });
+
+  await response.json();
+  if (!response.ok) {
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+  }
+
 };
 
 const startConnection = async () => {
   try {
     await connection.start();
-    console.log("3 - Conectado al Hub de SignalR");
-    // console.log("4 - Quiero hablar con el operador...");
-    // await connection.invoke("RequestHelp");
   } catch (err) {
     console.error("Error al conectar con el Hub de SignalR", err);
-    //  setTimeout(startConnection, 5000); // Reintento en caso de fallo
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
@@ -242,6 +264,7 @@ const newUserMessage = async () => {
     chatInputText.value = "";
   } catch (err) {
     console.error("Error al enviar mensaje:", err);
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
@@ -262,6 +285,7 @@ const fetchNextNode = async (flowId, currentNodeId = null, condition = null) => 
     }
   } catch (err) {
     console.error(err.message);
+    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
@@ -313,14 +337,12 @@ const displayLoadingIndicator = () => {
   loader.classList.add("stage");
   loader.innerHTML = `<div class="dot-falling"></div>`;
   messagesList.appendChild(loader);
-  console.log('Esperando nodo...');
 }
 
 const removeLoadingIndicator = () => {
   setTimeout(() => {
     const loader = document.querySelector('.stage');
     loader?.remove();
-    console.log('HAY respuesta del backend');
   }, 1000)
 }
 
