@@ -120,35 +120,33 @@ const sendIdentityData = async (customerData) => {
     await startConnection();
     createMessageElementAndAppend({ senderType: 2, content: '<p>🤖 Vemos que tienes un chat sin terminar con nosotros, te gustaría continuarlo?</p>' });
 
-    createYesNoButtons(async () => {
-      createMessageElementAndAppend({
-        senderType: 2,
-        content: `<p>🤖 Perfecto! Enseguida te comunicamos con un operador, abajo incluimos el historial de la última conversación que tuviste ⬇️ </p>`
-      });
-      renderPreviousChatMessages(EmbedContext.pendingChat);
-      EmbedContext.chatId = EmbedContext.pendingChat.id;
-      displayLoadingIndicator();
-      console.log("19 - Quiero retomar un chat pendiente...");
-      await connection.invoke("RequestHelp", EmbedContext.pendingChat);
-    },
+    createYesNoButtons(
+      async () => {
+        createMessageElementAndAppend({
+          senderType: 2,
+          content: `<p>🤖 Perfecto! Enseguida te comunicamos con un operador, abajo incluimos el historial de la última conversación que tuviste ⬇️ </p>`
+        });
+        renderPreviousChatMessages(EmbedContext.pendingChat);
+        EmbedContext.chatId = EmbedContext.pendingChat.id;
+        displayLoadingIndicator();
+        console.log("19 - Quiero retomar un chat pendiente...");
+        await connection.invoke("RequestHelp", EmbedContext.pendingChat);
+      },
       async () => {
         const endStatusId = 4;
         await updateChat(EmbedContext.pendingChat.id, endStatusId)
         EmbedContext.pendingChat = false;
+        if (!EmbedContext.pendingChat && noError) {
+          if (EmbedContext.flow != null) {
+            fetchNextNode(EmbedContext.flow.id);
+          } else {
+            //Creo un chat nuevo
+            saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+          }
+        }
       }); //
 
   }
-
-
-  if (!EmbedContext.pendingChat && noError) {
-    if (EmbedContext.flow != null) {
-      fetchNextNode(EmbedContext.flow.id);
-    } else {
-      //Creo un chat nuevo
-      saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
-    }
-  }
-
 };
 
 const getPendingChat = async (customerId, clientId) => {
