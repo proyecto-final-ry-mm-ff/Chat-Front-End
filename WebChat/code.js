@@ -133,7 +133,7 @@ const sendIdentityData = async (customerData) => {
     },
       () => {
         const endStatusId = 4;
-        updateChat(endStatusId)
+        updateChat(EmbedContext.pendingChat.id, endStatusId)
         EmbedContext.pendingChat = false;
       }); //
 
@@ -202,14 +202,14 @@ const saveChat = async (chatDto) => {
   }
 };
 
-export const updateChat = async (statusId) => {
+export const updateChat = async (chatId, statusId) => {
   const chatUpdateDto = {
-    chatId: EmbedContext.chatId,
+    chatId: chatId,
     customerId: EmbedContext.customerId,
     status: statusId,
     messages: [],
   };
-  const response = await fetch(`${apiUrl}/${EmbedContext.chatId}`, {
+  const response = await fetch(`${apiUrl}/${chatId}`, {
     headers: {
       "Content-Type": "application/json",
     },
