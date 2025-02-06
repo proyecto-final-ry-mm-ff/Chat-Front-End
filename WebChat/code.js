@@ -316,7 +316,9 @@ const processNode = async (node) => {
     displayLoadingIndicator();
 
     if (node.data.label == "Llamar Operador") {
-      await startConnection();
+      if (connection.state === signalR.HubConnectionState.Disconnected) {
+        await startConnection();
+      }
       saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
     }
 
