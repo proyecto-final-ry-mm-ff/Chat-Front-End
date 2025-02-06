@@ -131,9 +131,9 @@ const sendIdentityData = async (customerData) => {
       console.log("19 - Quiero retomar un chat pendiente...");
       await connection.invoke("RequestHelp", EmbedContext.pendingChat);
     },
-      () => {
+      async () => {
         const endStatusId = 4;
-        updateChat(EmbedContext.pendingChat.id, endStatusId)
+        await updateChat(EmbedContext.pendingChat.id, endStatusId)
         EmbedContext.pendingChat = false;
       }); //
 
