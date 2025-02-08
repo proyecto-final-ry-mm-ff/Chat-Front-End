@@ -59,9 +59,7 @@
                 return;
             }
 
-            const authorize = await response.json();
-            console.log("Autenticación exitosa:", authorize);
-
+            await response.json();
             // Cargar el chat solo si la autenticación es correcta
             loadChatWidget();
         } catch (error) {
