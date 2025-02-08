@@ -7,6 +7,23 @@ EmbedContext.webClientId = 0;
 EmbedContext.isExistingUser = false;
 EmbedContext.pendingChat = null;
 
+const SenderTypes = {
+  'CUSTOMER': 1,
+  'OPERATOR': 2,
+  'SYSTEM': 3,
+}
+
+const ChatSource = {
+  'WEB_WIDGET': 1
+}
+
+const ChatStatuses = {
+  'NEW': 1,
+  'TAKEN': 2,
+  'IN_PROGRESS': 3,
+  'ENDED': 4,
+}
+
 const apiUrl = 'https://sherlockapi-4qz4.onrender.com';
 const wssUrl = 'https://sherlock-signalr.onrender.com/chat-hub';
 // const apiUrl = "http://localhost:5015";
@@ -33,9 +50,8 @@ chatTogglerBtn.addEventListener("click", async () => {
     chatTogglerBtn.innerText === "mode_comment" ? chatTogglerBtn.innerHTML = "close" : chatTogglerBtn.innerHTML = "mode_comment"
 
   } catch (error) {
-    console.log(error)
+    console.warn(error)
   }
-
 });
 
 connection.on("ChatStarted", (chatConnectionId) => {
@@ -48,15 +64,8 @@ connection.on("ReceiveMessage", (messageDto) => {
 
 connection.on("OperatorJoined", (message) => {
   removeLoadingIndicator();
-  // const messageEl = document.createElement("li");
-  // const chatContent = `<p>Se ha asignado un operador! 🧑‍💻</p>`;
-  // messageEl.classList.add("message");
-  // messageEl.innerHTML = chatContent;
-  // messageEl.classList.add("incoming");
-  // messagesList.appendChild(messageEl);
-
   const messageDto = {
-    senderType: 2,
+    senderType: SenderTypes.SYSTEM,
     content: `<p>Se ha asignado un operador! 🧑‍💻</p>`
   }
 
@@ -76,7 +85,7 @@ const fetchActiveFlow = async () => {
     }
 
   } catch (error) {
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
     console.error("Error al obtener el flujo activo:", error.message);
   }
 }
@@ -94,17 +103,16 @@ const sendIdentityData = async (customerData) => {
 
   let noError = true;
   if (rawResponse.ok) {
-    // saveChat({ source: 1, messages: [], customerId: content.id });
     EmbedContext.customerId = content.customer.id;
     EmbedContext.isExistingUser = content.isExistingUser;
 
     if (!EmbedContext.isExistingUser) {
-      createMessageElementAndAppend({ senderType: 2, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
+      createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
     }
 
   } else {
     noError = false;
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 
   //Si es un usuario existente me fijo si tiene chats pendientes antes que nada
@@ -118,33 +126,31 @@ const sendIdentityData = async (customerData) => {
   if (EmbedContext.pendingChat) {
     //Ya conecto al HUB porque cualquiera de las
     await startConnection();
-    createMessageElementAndAppend({ senderType: 2, content: '<p>🤖 Vemos que tienes un chat sin terminar con nosotros, te gustaría continuarlo?</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>🤖 Vemos que tienes un chat sin terminar con nosotros, te gustaría continuarlo?</p>' });
 
     createYesNoButtons(
       async () => {
         createMessageElementAndAppend({
-          senderType: 2,
+          senderType: SenderTypes.SYSTEM,
           content: `<p>🤖 Perfecto! Enseguida te comunicamos con un operador, abajo incluimos el historial de la última conversación que tuviste ⬇️ </p>`
         });
         renderPreviousChatMessages(EmbedContext.pendingChat);
         EmbedContext.chatId = EmbedContext.pendingChat.id;
         displayLoadingIndicator();
-        console.log("19 - Quiero retomar un chat pendiente...");
         await connection.invoke("RequestHelp", EmbedContext.pendingChat);
       },
       async () => {
-        const endStatusId = 4;
-        await updateChat(EmbedContext.pendingChat.id, endStatusId)
+        await updateChat(EmbedContext.pendingChat.id, ChatStatuses.ENDED)
         EmbedContext.pendingChat = false;
         if (!EmbedContext.pendingChat && noError) {
           if (EmbedContext.flow != null) {
             fetchNextNode(EmbedContext.flow.id);
           } else {
             //Creo un chat nuevo
-            saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+            saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
           }
         }
-      }); //
+      });
 
   } else {
 
@@ -153,7 +159,7 @@ const sendIdentityData = async (customerData) => {
         fetchNextNode(EmbedContext.flow.id);
       } else {
         //Creo un chat nuevo
-        saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+        saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
       }
     }
 
@@ -201,14 +207,11 @@ const saveChat = async (chatDto) => {
   });
   const newChat = await rawResponse.json();
 
-  console.log("Chat creado: ", { newChat });
-
   if (rawResponse.ok) {
     EmbedContext.chatId = newChat.id;
-    console.log("4 - Quiero hablar con el operador...");
     await connection.invoke("RequestHelp", newChat);
   } else {
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 };
 
@@ -229,7 +232,7 @@ export const updateChat = async (chatId, statusId) => {
 
   await response.json();
   if (!response.ok) {
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 
 };
@@ -239,7 +242,7 @@ const startConnection = async () => {
     await connection.start();
   } catch (err) {
     console.error("Error al conectar con el Hub de SignalR", err);
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
@@ -257,7 +260,7 @@ const newUserMessage = async () => {
         EmbedContext.messageList.push(`Nombre: ${name} | Celular: ${phone}`);
       } else {
         createMessageElementAndAppend({
-          senderType: 2,
+          senderType: SenderTypes.SYSTEM,
           content: `<p>❌ El formato del número no es correcto, por favor intenta nuevamente</p>`
         });
       }
@@ -274,7 +277,7 @@ const newUserMessage = async () => {
     chatInputText.value = "";
   } catch (err) {
     console.error("Error al enviar mensaje:", err);
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
@@ -284,23 +287,19 @@ const fetchNextNode = async (flowId, currentNodeId = null, condition = null) => 
     const response = await fetch(`${apiUrl}/Flow/${flowId}/nextNode?${query}`);
     if (response.ok) {
       const nextNodes = await response.json();
-      console.log({ nextNodes });
       nextNodes.forEach(node => processNode(node));
     } else {
-      if (response.status == 404) {
-        console.log('Era último nodo')
-      } else {
+      if (!response.status == 404) {
         throw new Error("No se pudo obtener el nodo siguiente.");
       }
     }
   } catch (err) {
     console.error(err.message);
-    createMessageElementAndAppend({ senderType: 2, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
+    createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: '<p>Ha ocurrido un error, por favor inténtalo nuevamente más tarde</p>' });
   }
 }
 
 const processNode = async (node) => {
-  console.log('Procesando nodo', { node });
   if (node.type === "textNode") {
     const message = document.createElement("li");
     const chatContent = `<p>🤖 ${node.data.label}</p>`;
@@ -331,7 +330,7 @@ const processNode = async (node) => {
       if (connection.state === signalR.HubConnectionState.Disconnected) {
         await startConnection();
       }
-      saveChat({ source: 1, messages: [], customerId: EmbedContext.customerId });
+      saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
     }
 
     fetchNextNode(EmbedContext.flow.id, node.id);
@@ -341,7 +340,7 @@ const processNode = async (node) => {
 const displayLoadingIndicator = () => {
 
   createMessageElementAndAppend({
-    senderType: 2,
+    senderType: SenderTypes.SYSTEM,
     content: `<p> 🧑‍💻 Esperando por un operador...</p>`
   });
 
@@ -361,13 +360,22 @@ const removeLoadingIndicator = () => {
 const createMessageElementAndAppend = (messageDto) => {
 
   const messageEl = document.createElement("li");
-  console.log({ messageDto });
-  const senderIsClient = messageDto.senderType == 1 ? true : false;
   messageEl.classList.add("message");
+
+  switch (messageDto.senderType) {
+    case SenderTypes.CUSTOMER:
+      messageEl.classList.add("outgoing");
+      break;
+    case SenderTypes.OPERATOR:
+      messageEl.classList.add("incoming");
+      break;
+    default:
+      messageEl.classList.add("system");
+      break;
+  }
+
   const chatContent = `<p>${messageDto.content}</p>`;
   messageEl.innerHTML = chatContent;
-  messageEl.classList.add(senderIsClient ? "outgoing" : "incoming");
-
 
   messagesList.appendChild(messageEl);
   messagesList.scrollTo(0, messagesList.scrollHeight);
