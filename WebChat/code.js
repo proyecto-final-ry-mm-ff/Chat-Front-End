@@ -24,8 +24,10 @@ const ChatStatuses = {
   'ENDED': 4,
 }
 
-const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
-const wssUrl = ' https://sherlock-signalr-fbhubsasfrgghqba.canadacentral-01.azurewebsites.net/chat-hub';
+const apiUrl = process.env.API_URL;
+const wssUrl = process.env.SIGNALR_URL;
+// const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
+// const wssUrl = ' https://sherlock-signalr-fbhubsasfrgghqba.canadacentral-01.azurewebsites.net/chat-hub';
 // const apiUrl = "http://localhost:5015";
 // const wssUrl = "http://localhost:5056/chat-hub";
 const connection = new signalR.HubConnectionBuilder()

@@ -28,7 +28,8 @@ module.exports = {
     plugins: [
         // DefinePlugin reemplaza "process.env" por los valores
         new webpack.DefinePlugin({
-            'process.env': JSON.stringify(dotenv.parsed),
+            'process.env.API_URL': JSON.stringify(process.env.API_URL || dotenv.parsed.API_URL),
+            'process.env.SIGNALR_URL': JSON.stringify(process.env.SIGNALR_URL || dotenv.parsed.SIGNALR_URL),
         }),
         // Genera el index.html final en dist
         new HtmlWebpackPlugin({

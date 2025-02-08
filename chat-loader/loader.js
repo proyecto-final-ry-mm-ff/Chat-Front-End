@@ -4,7 +4,8 @@
     const script = document.currentScript;
 
     const targetScriptUrl = new URL(script.src);
-    const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
+    // const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
+    const apiUrl = process.env.API_URL;
     const token = targetScriptUrl.searchParams.get('token');
     const webId = targetScriptUrl.searchParams.get('webId');
 
@@ -40,7 +41,7 @@
 
         iframe.addEventListener("load", () => chatWidgetStyle.display = "block");
 
-        const chatWidgetUrl = `https://orange-pebble-00ae4940f.4.azurestaticapps.net/?clientId=${webId}`; // para probar esto hay que correr el chat en un puerto y el html de prueba en otro hasta tener algun lugar donde hostear el chat y una página real donde probarlo
+        const chatWidgetUrl = process.env.WIDGET_URL + `/?clientId=${webId}`;
 
         iframe.src = chatWidgetUrl;
 
@@ -48,7 +49,6 @@
     }
 
     const identifyMe = async () => {
-        console.log("Paso 1 - Me identifico como Web que paga el servicio...");
         try {
             const response = await fetch(`${apiUrl}/client/authenticate?webId=${webId}&token=${token}`, {
                 method: "POST",
@@ -71,14 +71,12 @@
 
 
     if (document.readyState === "complete") {
-        // loadChatWidget(); 
         identifyMe();
 
     }
     else {
         document.addEventListener("readystatechange", () => {
             if (document.readyState === "complete") {
-                //loadChatWidget();
                 identifyMe();
             }
         });

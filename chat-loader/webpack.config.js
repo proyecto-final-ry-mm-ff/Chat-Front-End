@@ -12,7 +12,9 @@ module.exports = {
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env': JSON.stringify(dotenv.parsed),
+      'process.env.API_URL': JSON.stringify(process.env.API_URL || dotenv.parsed.API_URL),
+      'process.env.SIGNALR_URL': JSON.stringify(process.env.SIGNALR_URL || dotenv.parsed.SIGNALR_URL),
+      'process.env.WIDGET_URL': JSON.stringify(process.env.WIDGET_URL || dotenv.parsed.WIDGET_URL),
     }),
     new HtmlWebpackPlugin({
       template: 'index.html', // Asegura que index.html sea copiado a dist
