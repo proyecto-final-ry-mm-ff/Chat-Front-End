@@ -305,7 +305,7 @@ const processNode = async (node) => {
     const chatContent = `<p>🤖 ${node.data.label}</p>`;
     message.classList.add("message");
     message.innerHTML = chatContent;
-    message.classList.add("incoming");
+    message.classList.add("system");
     messagesList.appendChild(message);
 
     messagesList.scrollTo(0, messagesList.scrollHeight);
