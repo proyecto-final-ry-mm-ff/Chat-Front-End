@@ -4,7 +4,6 @@
     const script = document.currentScript;
 
     const targetScriptUrl = new URL(script.src);
-    // const apiUrl = 'https://sherlock-api-bbhahnh2fghza4b8.canadacentral-01.azurewebsites.net';
     const apiUrl = process.env.API_URL;
     const token = targetScriptUrl.searchParams.get('token');
     const webId = targetScriptUrl.searchParams.get('webId');
