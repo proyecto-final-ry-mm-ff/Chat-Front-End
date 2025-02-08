@@ -92,12 +92,17 @@
     height: fit-content;
 }
 
-.messages-list .incoming {
+.messages-list .incoming,
+.messages-list .system {
     color: #000;
-    background-color: #f2f2f2;
+    background-color: #cdcdcd;
     border-radius: 10px 10px 10px 0;
     margin-top: 7px;
     justify-self: flex-start;
+}
+
+.messages-list .system {
+    background-color: #f2f2f2;
 }
 
 .messages-list .outgoing {
@@ -127,7 +132,8 @@
 }
 
 
-.message.incoming input {
+.message.incoming input,
+.message.system input {
     background-color: transparent;
     border: none;
     margin: 5px 0;
@@ -137,11 +143,13 @@
     border-bottom: 1px solid lightgreen;
 }
 
-.message.incoming input:first-of-type {
+.message.incoming input:first-of-type,
+.message.system input:first-of-type {
     margin-top: 10px;
 }
 
-.message.incoming input:focus-visible {
+.message.incoming input:focus-visible,
+.message.system input:focus-visible {
     outline: none;
 }
 
