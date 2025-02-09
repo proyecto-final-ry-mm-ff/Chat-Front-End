@@ -104,8 +104,12 @@ const sendIdentityData = async (customerData) => {
     EmbedContext.customerId = content.customer.id;
     EmbedContext.isExistingUser = content.isExistingUser;
 
-    if (!EmbedContext.isExistingUser && EmbedContext.flow != null) {
-      createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
+    if (!EmbedContext.isExistingUser) {
+      if (EmbedContext.flow != null) {
+        createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
+      } else {
+        createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: `<p>🤖 Genial ${content.customer.name}! te estamos comunicando con un operador 📞</p>` });
+      }
     }
 
   } else {
