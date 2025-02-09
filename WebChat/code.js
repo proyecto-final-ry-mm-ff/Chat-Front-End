@@ -147,6 +147,7 @@ const sendIdentityData = async (customerData) => {
             if (connection.state === signalR.HubConnectionState.Disconnected) {
               await startConnection();
             }
+            displayLoadingIndicator();
             //Creo un chat nuevo
             saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
           }
@@ -162,6 +163,7 @@ const sendIdentityData = async (customerData) => {
         if (connection.state === signalR.HubConnectionState.Disconnected) {
           await startConnection();
         }
+        displayLoadingIndicator();
         //Creo un chat nuevo
         saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
       }
