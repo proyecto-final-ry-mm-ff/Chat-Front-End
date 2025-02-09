@@ -104,7 +104,7 @@ const sendIdentityData = async (customerData) => {
     EmbedContext.customerId = content.customer.id;
     EmbedContext.isExistingUser = content.isExistingUser;
 
-    if (!EmbedContext.isExistingUser) {
+    if (!EmbedContext.isExistingUser && EmbedContext.flow != null) {
       createMessageElementAndAppend({ senderType: SenderTypes.SYSTEM, content: `<p>🤖 Genial ${content.customer.name}! qué buscás?</p>` });
     }
 
@@ -144,6 +144,9 @@ const sendIdentityData = async (customerData) => {
           if (EmbedContext.flow != null) {
             fetchNextNode(EmbedContext.flow.id);
           } else {
+            if (connection.state === signalR.HubConnectionState.Disconnected) {
+              await startConnection();
+            }
             //Creo un chat nuevo
             saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
           }
@@ -156,6 +159,9 @@ const sendIdentityData = async (customerData) => {
       if (EmbedContext.flow != null) {
         fetchNextNode(EmbedContext.flow.id);
       } else {
+        if (connection.state === signalR.HubConnectionState.Disconnected) {
+          await startConnection();
+        }
         //Creo un chat nuevo
         saveChat({ source: ChatSource.WEB_WIDGET, messages: [], customerId: EmbedContext.customerId });
       }
